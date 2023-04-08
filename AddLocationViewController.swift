@@ -31,7 +31,7 @@ class AddLocationViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
+        overrideUserInterfaceStyle = .dark
         setdefaulttemperature()
         
         searchTextField.delegate = self
@@ -141,6 +141,8 @@ func loadWeather(search: String?) {
         
       
             let dataToPassBack = WeatherItem(location: weatherResponseDefault.location.name,
+                                             region: weatherResponseDefault.location.region,
+                                             country: weatherResponseDefault.location.country,
                                  temperature: "\(Int(weatherResponseDefault.current.temp_c))",
                                  maxTemperature: "\(Int(weatherResponseDefault.forecast.forecastday[0].day.maxtemp_c))",
                                  minTemperature: "\(Int(weatherResponseDefault.forecast.forecastday[0].day.mintemp_c))",
@@ -169,6 +171,8 @@ extension AddLocationViewController : UITextFieldDelegate {
 
 struct WeatherItem {
     let location: String
+    let region: String
+    let country: String
     let temperature: String
     let maxTemperature: String
     let minTemperature: String

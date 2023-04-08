@@ -21,6 +21,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
     private var addLocationSegue : String = "goToAddLocation"
     let locationManager = CLLocationManager()
     var items: [WeatherItem] = []
+    var coordinate: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 43.0130, longitude: -81.1994)
     @IBOutlet weak var tableView: UITableView!
     
     
@@ -77,7 +78,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
     
     private func addWeatherAnnotation(for location: CLLocation) {
         
-        let coordinate = location.coordinate
+        coordinate = location.coordinate
         let latLong = "\(coordinate.latitude),\(coordinate.longitude)"
         
             weatherApi.fetchWeatherDetails(for: latLong) { [weak self] result in
@@ -102,7 +103,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
                         case 30...:
                     color = UIColor(red: 0.71, green: 0.0, blue: 0.0, alpha: 1.0)
                         default:
-                    color = UIColor.black // fallback color
+                    color = UIColor.black
                         }
                 
                 let annotation = AnnotationModal(location.coordinate,
@@ -141,7 +142,7 @@ extension ViewController: MKMapViewDelegate {
         if segue.identifier == screenDetailSegue{
             let viewController = segue.destination as! DetailsViewController
             
-            weatherApi.fetchWeatherDetails(for: "\(getUserLocation().coordinate.latitude) + \(getUserLocation().coordinate.longitude)") { result in
+            weatherApi.fetchWeatherDetails(for: "\(coordinate.latitude) + \(coordinate.longitude)") { result in
                 switch result {
                 case .success(let weatherResponse):
                     viewController.weatherResponse = weatherResponse; viewController.loadData()
@@ -209,13 +210,15 @@ extension ViewController: AddLocationViewControllerDelegate, UITableViewDataSour
     
             var content = cell.defaultContentConfiguration()
             content.text = item.location
+            let tempStrWidth = items.map { $0.maxTemperature.count }.max() ?? 0
             let maxTempWidth = items.map { $0.maxTemperature.count }.max() ?? 0
             let minTempWidth = items.map { $0.minTemperature.count }.max() ?? 0
     
             var formattedString = ""
+                let tempStr = item.maxTemperature.padding(toLength: tempStrWidth, withPad: " ", startingAt: 0)
                 let maxTempStr = item.maxTemperature.padding(toLength: maxTempWidth, withPad: " ", startingAt: 0)
                 let minTempStr = item.minTemperature.padding(toLength: minTempWidth, withPad: " ", startingAt: 0)
-                formattedString += "H: \(maxTempStr)\t\tL: \(minTempStr)"
+                formattedString += "T: \(tempStr)\u{00B0}\t\tH: \(maxTempStr)\u{00B0}\t\tL: \(minTempStr)\u{00B0}"
     
             content.secondaryText = formattedString
     
@@ -232,12 +235,13 @@ extension ViewController: AddLocationViewControllerDelegate, UITableViewDataSour
 extension ViewController : UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        tableView.reloadData()
         let geocoder = CLGeocoder()
-        print("location \(tableView.cellForRow(at: indexPath)?.textLabel?.text ?? "")")
-        geocoder.geocodeAddressString(tableView.cellForRow(at: indexPath)?.textLabel?.text ?? "") { (placemarks, error) in
+        
+        geocoder.geocodeAddressString( "\(self.items[indexPath.row].location) , \(self.items[indexPath.row].country)") { (placemarks, error) in
             guard let placemark = placemarks?.first,
                   let location = placemark.location else {
-                print("nolocartion")
+                print("No location")
                 return
             }
             print("location ")

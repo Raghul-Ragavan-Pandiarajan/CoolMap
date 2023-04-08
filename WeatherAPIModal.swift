@@ -18,6 +18,7 @@ struct Location: Decodable {
     let name: String
     let region: String
     let localtime: String
+    let country: String
 }
 
 struct Weather: Decodable {
