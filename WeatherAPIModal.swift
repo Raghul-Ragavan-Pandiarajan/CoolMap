@@ -71,7 +71,7 @@ class WeatherAPIModal {
     }
     
     
-     func fetchWeatherDetails(for search: String, completion: @escaping (Result<WeatherResponse, Error>) -> Void ) {
+    func fetchWeatherDetails(for search: String, completion: @escaping (Result<WeatherResponse, Error>) -> Void ) {
         
         guard let url = buildWeatherURL(for: search) else {
             print("Could not get URL")

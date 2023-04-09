@@ -31,7 +31,6 @@ class DetailsViewController: UIViewController {
             print("No value")
             return
         }
-        
         print(weatherResponse)
         setWeatherDetails(weatherResponse)
         loadForecastDetails()
@@ -46,7 +45,6 @@ class DetailsViewController: UIViewController {
         }
         
         items = []
-        
         for day in forecastDays.prefix(7) {
             let localtime = day.date
             let maxTemp = day.day.maxtemp_c
@@ -55,7 +53,6 @@ class DetailsViewController: UIViewController {
             guard let weatherImg = utilityFunctions.getWeatherImage(code: weatherImageCode) else {
                 continue
             }
-            
             let dayOfWeek = utilityFunctions.formatDate(dateString: localtime)
             let maxTemperature = "\(Int(maxTemp))\u{00B0}"
             let minTemperature = "\(Int(minTemp))\u{00B0}"
@@ -63,7 +60,6 @@ class DetailsViewController: UIViewController {
             guard let dayOfWeek = dayOfWeek else {
                 return
             }
-            
             items.append(ItemWeatherData(dayOfWeek: dayOfWeek, maxTemperature: maxTemperature, minTemperature: minTemperature, weatherImage: weatherImg))
         }
     }
@@ -82,6 +78,9 @@ class DetailsViewController: UIViewController {
         }
     }
 }
+
+
+
 extension DetailsViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -96,15 +95,15 @@ extension DetailsViewController: UITableViewDataSource {
         content.text = item.dayOfWeek
         let maxTempWidth = items.map { $0.maxTemperature.count }.max() ?? 0
         let minTempWidth = items.map { $0.minTemperature.count }.max() ?? 0
-
+        
         var formattedString = ""
-            let maxTempStr = item.maxTemperature.padding(toLength: maxTempWidth, withPad: " ", startingAt: 0)
-            let minTempStr = item.minTemperature.padding(toLength: minTempWidth, withPad: " ", startingAt: 0)
-            formattedString += "H: \(maxTempStr)\t\tL: \(minTempStr)"
-
+        let maxTempStr = item.maxTemperature.padding(toLength: maxTempWidth, withPad: " ", startingAt: 0)
+        let minTempStr = item.minTemperature.padding(toLength: minTempWidth, withPad: " ", startingAt: 0)
+        formattedString += "H: \(maxTempStr)\t\tL: \(minTempStr)"
+        
         content.secondaryText = formattedString
-
-
+        
+        
         content.image = item.weatherImage
         
         cell.contentConfiguration = content

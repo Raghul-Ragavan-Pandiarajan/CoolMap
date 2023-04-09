@@ -11,7 +11,7 @@ import MapKit
 
 
 
-class ViewController: UIViewController, CLLocationManagerDelegate{
+class ViewController: UIViewController{
     
     @IBOutlet weak var mapView: MKMapView!
     
@@ -48,15 +48,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
         return location
     }
     
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        mapConfiguration(for: locations.last!)
-        addWeatherAnnotation(for: locations.last!)
-    }
-    
     func mapConfiguration(for location: CLLocation) {
         
         mapView.delegate = self
-        
         mapView.mapType = .mutedStandard
         
         let location: CLLocation = location
@@ -66,9 +60,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
                                         latitudinalMeters: radiusInMeters,
                                         longitudinalMeters: radiusInMeters)
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                   self.mapView.setRegion(region, animated: true)
-               }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.mapView.setRegion(region, animated: true)
+        }
         
         
         let cameraBoundary = MKMapView.CameraBoundary(coordinateRegion: region)
@@ -85,7 +79,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
         coordinate = location.coordinate
         let latLong = "\(coordinate.latitude),\(coordinate.longitude)"
         
-            weatherApi.fetchWeatherDetails(for: latLong) { [weak self] result in
+        weatherApi.fetchWeatherDetails(for: latLong) { [weak self] result in
             guard let self = self else { return }
             
             switch result {
@@ -94,27 +88,27 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
                 let color: UIColor
                 
                 switch temperature {
-                        case ...0:
-                            color = UIColor(red: 0.51, green: 0.22, blue: 0.72, alpha: 1.0)
-                        case 0..<12:
+                case ...0:
+                    color = UIColor(red: 0.51, green: 0.22, blue: 0.72, alpha: 1.0)
+                case 0..<12:
                     color = UIColor(red: 0.19, green: 0.39, blue: 0.67, alpha: 1.0)
-                        case 12..<17:
+                case 12..<17:
                     color = UIColor(red: 0.33, green: 0.58, blue: 0.82, alpha: 1.0)
-                        case 17..<25:
+                case 17..<25:
                     color = UIColor(red: 1.0, green: 0.92, blue: 0.23, alpha: 1.0)
-                        case 25..<30:
+                case 25..<30:
                     color = UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 1.0)
-                        case 30...:
+                case 30...:
                     color = UIColor(red: 0.71, green: 0.0, blue: 0.0, alpha: 1.0)
-                        default:
+                default:
                     color = UIColor.black
-                        }
+                }
                 
                 let annotation = AnnotationModal(location.coordinate,
-                                              "\(weatherResponse.current.condition.text)",
-                                              "Temperature : \(Int(weatherResponse.current.temp_c))\u{00B0}  Feels Like : \(Int(weatherResponse.current.feelslike_c))\u{00B0}",
-                                              "\(Int(weatherResponse.current.temp_c))\u{00B0}",
-                                              color ,
+                                                 "\(weatherResponse.current.condition.text)",
+                                                 "Temperature : \(Int(weatherResponse.current.temp_c))\u{00B0}  Feels Like : \(Int(weatherResponse.current.feelslike_c))\u{00B0}",
+                                                 "\(Int(weatherResponse.current.temp_c))\u{00B0}",
+                                                 color ,
                                                  utilityFunctions.getWeatherImage(code: weatherResponse.current.condition.code))
                 self.mapView.layoutMargins = UIEdgeInsets(top: 25, left: 25, bottom: 25, right: 25)
                 self.mapView.addAnnotation(annotation)
@@ -129,17 +123,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
     @IBAction func addNewLocationButtonPressed(_ sender: UIBarButtonItem) {
         performSegue(withIdentifier: "goToAddLocation", sender: nil)
     }
-    
-    
-}
-
-
-extension ViewController: MKMapViewDelegate {
-    
-    @objc func buttonTapped(sender: UIButton) {
-        performSegue(withIdentifier: "goToDetailsScreen", sender: nil)
-    }
-    
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
@@ -171,18 +154,29 @@ extension ViewController: MKMapViewDelegate {
         }
     }
     
+}
+
+extension ViewController: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        mapConfiguration(for: locations.last!)
+        addWeatherAnnotation(for: locations.last!)
+    }
+}
+
+
+extension ViewController: MKMapViewDelegate {
+    
+    @objc func buttonTapped(sender: UIButton) {
+        performSegue(withIdentifier: "goToDetailsScreen", sender: nil)
+    }
+    
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         
         let identifier = ""
         let view = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-        view.centerOffset = CGPointMake(view.frame.size.width/2, -view.frame.size.height/2)
-        view.canShowCallout = true
-        view.calloutOffset = CGPoint(x: 0, y: 10)
-        
-        
         let button = UIButton(type: .detailDisclosure)
         button.addTarget(self, action: #selector(buttonTapped(sender:)), for: .touchUpInside)
-        
+        view.canShowCallout = true
         view.rightCalloutAccessoryView = button
         view.tintColor = UIColor.systemGray2
         view.glyphImage = UIImage(systemName: "mappin.circle.fill")
@@ -196,49 +190,6 @@ extension ViewController: MKMapViewDelegate {
         return view
     }
 }
-
-extension ViewController: AddLocationViewControllerDelegate, UITableViewDataSource {
-    func addLocationViewControllerDelegateDidFinish(with data: WeatherItem) {
-        if (!items.contains(where: { $0.location == data.location && $0.country == data.country})) {
-            items.append(data)
-        }
-        
-        tableView.reloadData()
-        tableView.isHidden = false
-    }
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        print(items.count)
-            return items.count
-        }
-    
-        func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "weatherDetailsCell", for: indexPath)
-            let item = items[indexPath.row]
-    
-            var content = cell.defaultContentConfiguration()
-            
-            content.text = item.location
-            let tempStrWidth = items.map { $0.temperature.count }.max() ?? 0
-            let maxTempWidth = items.map { $0.maxTemperature.count }.max() ?? 0
-            let minTempWidth = items.map { $0.minTemperature.count }.max() ?? 0
-    
-            var formattedString = ""
-                let tempStr = item.temperature.padding(toLength: tempStrWidth, withPad: " ", startingAt: 0)
-                let maxTempStr = item.maxTemperature.padding(toLength: maxTempWidth, withPad: " ", startingAt: 0)
-                let minTempStr = item.minTemperature.padding(toLength: minTempWidth, withPad: " ", startingAt: 0)
-                formattedString += "T: \(tempStr)\u{00B0}\tH: \(maxTempStr)\u{00B0}\tL: \(minTempStr)\u{00B0}"
-    
-            content.secondaryText = formattedString
-    
-    
-            content.image = item.weatherImage
-    
-            cell.contentConfiguration = content
-            return cell
-        }
-    
-}
-
 
 extension ViewController : UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -254,3 +205,42 @@ extension ViewController : UITableViewDelegate {
         }
     }
 }
+
+extension ViewController: AddLocationViewControllerDelegate, UITableViewDataSource {
+    func addLocationViewControllerDelegateDidFinish(with data: WeatherItem) {
+        if (!items.contains(where: { $0.location == data.location && $0.country == data.country})) {
+            items.append(data)
+        }
+        tableView.reloadData()
+        tableView.isHidden = false
+    }
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        print(items.count)
+        return items.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "weatherDetailsCell", for: indexPath)
+        let item = items[indexPath.row]
+        var content = cell.defaultContentConfiguration()
+        
+        let tempStrWidth = items.map { $0.temperature.count }.max() ?? 0
+        let maxTempWidth = items.map { $0.maxTemperature.count }.max() ?? 0
+        let minTempWidth = items.map { $0.minTemperature.count }.max() ?? 0
+        
+        var formattedString = ""
+        let tempStr = item.temperature.padding(toLength: tempStrWidth, withPad: " ", startingAt: 0)
+        let maxTempStr = item.maxTemperature.padding(toLength: maxTempWidth, withPad: " ", startingAt: 0)
+        let minTempStr = item.minTemperature.padding(toLength: minTempWidth, withPad: " ", startingAt: 0)
+        formattedString += "T: \(tempStr)\u{00B0}\t\tH: \(maxTempStr)\u{00B0}\t L: \(minTempStr)\u{00B0}"
+        
+        content.text = item.location
+        content.secondaryText = formattedString
+        content.image = item.weatherImage
+        cell.contentConfiguration = content
+        return cell
+    }
+    
+}
+
+
