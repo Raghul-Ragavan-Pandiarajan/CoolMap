@@ -25,11 +25,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
     @IBOutlet weak var tableView: UITableView!
     
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         overrideUserInterfaceStyle = .dark
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.isHidden = true
         locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
         locationManager.startUpdatingLocation()
@@ -64,8 +66,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
                                         latitudinalMeters: radiusInMeters,
                                         longitudinalMeters: radiusInMeters)
         
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                   self.mapView.setRegion(region, animated: true)
+               }
         
-        mapView.setRegion(region, animated: true)
         
         let cameraBoundary = MKMapView.CameraBoundary(coordinateRegion: region)
         mapView.setCameraBoundary(cameraBoundary, animated: true)
@@ -112,7 +116,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
                                               "\(Int(weatherResponse.current.temp_c))\u{00B0}",
                                               color ,
                                                  utilityFunctions.getWeatherImage(code: weatherResponse.current.condition.code))
-                
+                self.mapView.layoutMargins = UIEdgeInsets(top: 25, left: 25, bottom: 25, right: 25)
                 self.mapView.addAnnotation(annotation)
             case .failure(let error):
                 print("Weather API Error: ", error.localizedDescription)
@@ -167,12 +171,11 @@ extension ViewController: MKMapViewDelegate {
         }
     }
     
-    
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         
         let identifier = ""
         let view = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-        
+        view.centerOffset = CGPointMake(view.frame.size.width/2, -view.frame.size.height/2)
         view.canShowCallout = true
         view.calloutOffset = CGPoint(x: 0, y: 10)
         
@@ -196,8 +199,12 @@ extension ViewController: MKMapViewDelegate {
 
 extension ViewController: AddLocationViewControllerDelegate, UITableViewDataSource {
     func addLocationViewControllerDelegateDidFinish(with data: WeatherItem) {
-        items.append(data)
+        if (!items.contains(where: { $0.location == data.location && $0.country == data.country})) {
+            items.append(data)
+        }
+        
         tableView.reloadData()
+        tableView.isHidden = false
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         print(items.count)
@@ -209,16 +216,17 @@ extension ViewController: AddLocationViewControllerDelegate, UITableViewDataSour
             let item = items[indexPath.row]
     
             var content = cell.defaultContentConfiguration()
+            
             content.text = item.location
-            let tempStrWidth = items.map { $0.maxTemperature.count }.max() ?? 0
+            let tempStrWidth = items.map { $0.temperature.count }.max() ?? 0
             let maxTempWidth = items.map { $0.maxTemperature.count }.max() ?? 0
             let minTempWidth = items.map { $0.minTemperature.count }.max() ?? 0
     
             var formattedString = ""
-                let tempStr = item.maxTemperature.padding(toLength: tempStrWidth, withPad: " ", startingAt: 0)
+                let tempStr = item.temperature.padding(toLength: tempStrWidth, withPad: " ", startingAt: 0)
                 let maxTempStr = item.maxTemperature.padding(toLength: maxTempWidth, withPad: " ", startingAt: 0)
                 let minTempStr = item.minTemperature.padding(toLength: minTempWidth, withPad: " ", startingAt: 0)
-                formattedString += "T: \(tempStr)\u{00B0}\t\tH: \(maxTempStr)\u{00B0}\t\tL: \(minTempStr)\u{00B0}"
+                formattedString += "T: \(tempStr)\u{00B0}\tH: \(maxTempStr)\u{00B0}\tL: \(minTempStr)\u{00B0}"
     
             content.secondaryText = formattedString
     
@@ -235,16 +243,12 @@ extension ViewController: AddLocationViewControllerDelegate, UITableViewDataSour
 extension ViewController : UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        tableView.reloadData()
         let geocoder = CLGeocoder()
-        
         geocoder.geocodeAddressString( "\(self.items[indexPath.row].location) , \(self.items[indexPath.row].country)") { (placemarks, error) in
             guard let placemark = placemarks?.first,
                   let location = placemark.location else {
-                print("No location")
                 return
             }
-            print("location ")
             self.mapConfiguration(for: location)
             self.addWeatherAnnotation(for: location)
         }

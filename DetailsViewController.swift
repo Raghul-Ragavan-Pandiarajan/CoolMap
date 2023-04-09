@@ -68,6 +68,10 @@ class DetailsViewController: UIViewController {
         }
     }
     
+    @IBAction func backButton(_ sender: UIButton) {
+        dismiss(animated: true)
+    }
+    
     private func setWeatherDetails(_ weatherResponse: WeatherResponse) {
         DispatchQueue.main.async { [self] in
             locationLabel.text = weatherResponse.location.name
