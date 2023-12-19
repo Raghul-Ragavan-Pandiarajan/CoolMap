@@ -18,7 +18,7 @@ class DetailsViewController: UIViewController {
     private var items: [ItemWeatherData] = []
     private let utilityFunctions = Utilities()
     
-    var weatherResponse: WeatherResponse? 
+    var weatherResponse: WeatherResponse?
     
     override func viewDidLoad() {
         super.viewDidLoad()

@@ -81,10 +81,12 @@ class ViewController: UIViewController{
         
         weatherApi.fetchWeatherDetails(for: latLong) { [weak self] result in
             guard let self = self else { return }
+            print(result)
             
             switch result {
             case .success(let weatherResponse):
                 let temperature = weatherResponse.current.temp_c
+                
                 let color: UIColor
                 
                 switch temperature {
@@ -110,8 +112,11 @@ class ViewController: UIViewController{
                                                  "\(Int(weatherResponse.current.temp_c))\u{00B0}",
                                                  color ,
                                                  utilityFunctions.getWeatherImage(code: weatherResponse.current.condition.code))
-                self.mapView.layoutMargins = UIEdgeInsets(top: 25, left: 25, bottom: 25, right: 25)
-                self.mapView.addAnnotation(annotation)
+                DispatchQueue.main.async {
+                    self.mapView.layoutMargins = UIEdgeInsets(top: 25, left: 25, bottom: 25, right: 25)
+                    self.mapView.addAnnotation(annotation)
+                }
+               
             case .failure(let error):
                 print("Weather API Error: ", error.localizedDescription)
             }
@@ -159,7 +164,10 @@ class ViewController: UIViewController{
 extension ViewController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         mapConfiguration(for: locations.last!)
-        addWeatherAnnotation(for: locations.last!)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.addWeatherAnnotation(for: locations.last!)
+        }
+        
     }
 }
 
@@ -242,5 +250,4 @@ extension ViewController: AddLocationViewControllerDelegate, UITableViewDataSour
     }
     
 }
-
 

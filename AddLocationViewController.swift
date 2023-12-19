@@ -22,7 +22,6 @@ class AddLocationViewController: UIViewController {
     @IBOutlet weak var weatherImage: UIImageView!
     @IBOutlet weak var farenheitLabel: UIButton!
     weak var delegate: AddLocationViewControllerDelegate?
-    
     let utilityFunctions = Utilities()
     let weatherApi = WeatherAPIModal()
     var weatherResponseDefault: WeatherResponse?
@@ -36,6 +35,9 @@ class AddLocationViewController: UIViewController {
         
         searchTextField.delegate = self
         
+    }
+    @IBAction func errorButtonPressed(_ sender: UIBarButtonItem) {
+        performSegue(withIdentifier: "goToErrorScreen", sender: nil)
     }
     
     func loadData(_ weatherResponse: WeatherResponse?) {
@@ -115,8 +117,7 @@ func loadWeather(search: String?) {
             case .success(let weatherResponse):
                 loadData(weatherResponse)
             case .failure(let error):
-                print(error.localizedDescription)
-                
+                print(error)
             }
     }
     
@@ -125,6 +126,7 @@ func loadWeather(search: String?) {
    
     
 }
+    
 
     @IBAction func CloseButtonPressed(_ sender: UIBarButtonItem) {
        dismiss(animated: true)
@@ -153,6 +155,7 @@ func loadWeather(search: String?) {
         dismiss(animated: true, completion: nil)
         
     }
+    
     
 }
 

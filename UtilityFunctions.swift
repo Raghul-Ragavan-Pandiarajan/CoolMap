@@ -9,7 +9,7 @@ import UIKit
 
 class Utilities {
     
-    static let shared = Utilities() 
+    static let shared = Utilities()
     
     
     func parseJson(data: Data) -> WeatherResponse? {

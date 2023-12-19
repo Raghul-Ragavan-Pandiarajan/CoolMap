@@ -1,4 +1,4 @@
-//
+
 //  WeatherAPIModal.swift
 //  CoolMap
 //
@@ -54,13 +54,13 @@ class WeatherAPIModal {
         
         let baseUrl = "https://api.weatherapi.com/v1/"
         let currentEndpoint = "forecast.json"
-        let apikey = "fda72daabbb9454696e203424231903"
+        let apikey = "a1250f9282f64b1c9d9184748231912"
         
         var components = URLComponents(string: baseUrl + currentEndpoint)
         components?.queryItems = [
             URLQueryItem(name: "key", value: apikey),
             URLQueryItem(name: "q", value: query),
-            URLQueryItem(name: "days", value: "7")
+            URLQueryItem(name: "days", value: "3")
         ]
         
         guard let url = components?.url else {
